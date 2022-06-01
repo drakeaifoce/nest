@@ -8,7 +8,8 @@ import {
     ManyToOne,
     CreateDateColumn,
     AfterLoad,
-    getRepository
+    getRepository,
+    AfterInsert
 } from "typeorm"
 
 @Entity()
@@ -30,14 +31,25 @@ export class Order {
 
     @AfterLoad()
         calculateSum = async () => {
-            const result = await getRepository(Good)
+            if(this.goods.length === 0) {
+                this.sum = 0
+            } else {
+                const result = await getRepository(Good)
                 .createQueryBuilder('good')
                 .select("SUM(good.price)::int as sum")
                 .where(`good."orderId" = :id`, { id: this.id })
                 .getRawOne()
+                
+                if (this.sum !== result.sum) {
+                    this.sum = result.sum
 
-            if(this.sum !== result.sum) {
-                this.sum = result.sum
+                    await getRepository(Order)
+                        .createQueryBuilder()
+                        .update(Order)
+                        .set({ sum: this.sum })
+                        .where(`id = :id`, { id: this.id })
+                        .execute()
+                }
             }
         }
 }

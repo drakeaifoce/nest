@@ -10,7 +10,6 @@ import { Order } from './orders/orders.entity';
 import { Good } from './goods/goods.entity';
 import { User } from './users/users.entity';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
